@@ -1,0 +1,21 @@
+# ---------------------------------------------------------------------------
+# OmniVoice project requirements
+# ---------------------------------------------------------------------------
+# STEP 1 (install separately, NOT via this file — pick the line for your machine):
+#
+#   NVIDIA GPU (CUDA 12.8 example):
+#     pip install torch==2.8.0+cu128 torchaudio==2.8.0+cu128 --extra-index-url https://download.pytorch.org/whl/cu128
+#
+#   CPU only / no GPU (what this laptop has, same as the Piper setup):
+#     pip install torch==2.8.0 torchaudio==2.8.0
+#
+#   Apple Silicon (M1/M2/M3):
+#     pip install torch==2.8.0 torchaudio==2.8.0
+#
+# See https://pytorch.org/get-started/locally/ for other CUDA versions.
+# ---------------------------------------------------------------------------
+
+# STEP 2: everything below can be installed normally
+omnivoice
+soundfile
+num2words          # used as a fallback English number-to-words normalizer

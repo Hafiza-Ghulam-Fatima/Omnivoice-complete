@@ -1,0 +1,61 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+omnivoice-env/
+omnivoice-env2/
+venv/
+.venv/
+ENV/
+env/
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Testing and coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated outputs and data
+output/
+outputs/
+T1D-UOM_population_transformer_results/
+reference_audio/
+voice_bank/
+
+# Secrets
+.env
+.env.*
+!.env.example
+secrets.json
+
+# Caches
+.hf-cache/
+.pip-cache/
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+
+# Logs
+*.log   

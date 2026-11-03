@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OmniVoice TTS</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 30px 20px;
+  }
+  .card {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 4px 0;
+    color: #f8fafc;
+  }
+  .subtitle {
+    color: #94a3b8;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #0f172a;
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: #6366f1;
+    color: white;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  label {
+    display: block;
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  textarea, input[type="text"] {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    font-family: inherit;
+  }
+  textarea { min-height: 90px; }
+  textarea:focus, select:focus, input:focus {
+    outline: none;
+    border-color: #6366f1;
+  }
+  select {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .file-drop {
+    border: 2px dashed #334155;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    color: #94a3b8;
+    transition: border-color 0.15s;
+  }
+  .file-drop:hover, .file-drop.dragover { border-color: #6366f1; color: #cbd5e1; }
+  .file-drop input { display: none; }
+  .file-name {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #4ade80;
+  }
+  .source-switch {
+    display: flex;
+    gap: 4px;
+    background: #0f172a;
+    padding: 3px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .source-switch .stab {
+    flex: 1;
+    text-align: center;
+    padding: 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+  .source-switch .stab.active { background: #334155; color: #e2e8f0; }
+  .source-panel { display: none; }
+  .source-panel.active { display: block; }
+  .mic-box {
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+  }
+  .mic-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    transition: transform 0.15s, background 0.15s;
+    position: relative;
+  }
+  .mic-btn:hover { background: #dc2626; }
+  .mic-btn.recording {
+    background: #ef4444;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .mic-btn svg { width: 24px; height: 24px; fill: white; }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); }
+    70%  { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+    100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  }
+  .mic-timer {
+    margin-top: 10px;
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  .mic-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+  .mic-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .mic-actions button {
+    width: auto;
+    margin-top: 0;
+    padding: 8px 16px;
+    font-size: 12px;
+    background: #334155;
+  }
+  .mic-actions button:hover:not(:disabled) { background: #475569; }
+  .mic-actions button.danger { background: transparent; color: #f87171; border: 1px solid #7f1d1d; }
+  .mic-preview {
+    width: 100%;
+    margin-top: 12px;
+  }
+  .hint {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 13px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: #4f46e5; }
+  button:disabled {
+    background: #334155;
+    cursor: not-allowed;
+  }
+  .status {
+    margin-top: 14px;
+    font-size: 13px;
+    min-height: 18px;
+  }
+  .status.error { color: #f87171; }
+  .status.ok { color: #4ade80; }
+  audio {
+    width: 100%;
+    margin-top: 16px;
+    display: none;
+  }
+  .spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>OmniVoice TTS</h1>
+  <div class="subtitle">AI Avatar Assistant — voice synthesis</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('preset')">Preset Voices</div>
+    <div class="tab" onclick="switchTab('clone')">Clone New Voice</div>
+  </div>
+
+  <!-- PRESET VOICE PANEL -->
+  <div id="panel-preset" class="panel active">
+    <label for="voice">Voice</label>
+    <select id="voice">
+      <option value="fasih">Fasih (Urdu)</option>
+      <option value="amy">Amy (English)</option>
+      <option value="ryan">Ryan (English)</option>
+    </select>
+
+    <label for="text">Text</label>
+    <textarea id="text" placeholder="Type the text you want to synthesize...">Hello, this is my AI avatar assistant speaking.</textarea>
+
+    <button id="generateBtn" onclick="generatePreset()">Generate Speech</button>
+  </div>
+
+  <!-- CLONE NEW VOICE PANEL -->
+  <div id="panel-clone" class="panel">
+    <label>Reference Audio (3–10 seconds, clean speech)</label>
+
+    <div class="source-switch">
+      <div class="stab active" id="stab-upload" onclick="switchSource('upload')">Upload File</div>
+      <div class="stab" id="stab-mic" onclick="switchSource('mic')">Record with Mic</div>
+    </div>
+
+    <div id="source-upload" class="source-panel active">
+      <div class="file-drop" id="dropZone" onclick="document.getElementById('audioFile').click()">
+        <span id="dropText">Click to choose a .wav/.mp3 file, or drag it here</span>
+        <input type="file" id="audioFile" accept="audio/*">
+      </div>
+      <div id="fileName" class="file-name"></div>
+    </div>
+
+    <div id="source-mic" class="source-panel">
+      <div class="mic-box">
+        <button type="button" class="mic-btn" id="micBtn" onclick="toggleRecording()">
+          <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>
+        </button>
+        <div class="mic-timer" id="micTimer">00:00</div>
+        <div class="mic-hint" id="micHint">Tap to start recording (3–10 seconds of clean speech)</div>
+        <audio id="micPreview" class="mic-preview" controls style="display:none;"></audio>
+        <div class="mic-actions" id="micActions" style="display:none;">
+          <button type="button" onclick="reRecord()">Re-record</button>
+          <button type="button" class="danger" onclick="clearRecording()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <label for="refText">Exact transcript of the reference clip</label>
+    <textarea id="refText" placeholder="Type exactly what is said in the reference audio..."></textarea>
+
+    <label for="cloneLang">Language</label>
+    <select id="cloneLang">
+      <option value="en">English</option>
+      <option value="ur">Urdu</option>
+    </select>
+
+    <label for="cloneText">Text to speak in the cloned voice</label>
+    <textarea id="cloneText" placeholder="Type the new sentence you want the cloned voice to say..."></textarea>
+
+    <label for="saveAs">Save this voice as (optional)</label>
+    <input type="text" id="saveAs" placeholder="e.g. sara — leave blank to use once only">
+    <div class="hint">If given a name, this voice is saved permanently and can be reused later.</div>
+
+    <button id="cloneBtn" onclick="generateClone()">Clone &amp; Generate</button>
+  </div>
+
+  <div id="status" class="status"></div>
+  <audio id="player" controls></audio>
+</div>
+
+<script>
+  // Change this if the backend is hosted somewhere other than localhost
+  const API_BASE = "http://127.0.0.1:8000";
+
+  function switchTab(name) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    document.querySelector(`.tab:nth-child(${name === "preset" ? 1 : 2})`).classList.add("active");
+    document.getElementById(`panel-${name}`).classList.add("active");
+    document.getElementById("status").textContent = "";
+    document.getElementById("player").style.display = "none";
+  }
+
+  // Drag & drop wiring
+  const dropZone = document.getElementById("dropZone");
+  const audioFileInput = document.getElementById("audioFile");
+  ["dragover", "dragleave", "drop"].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropZone.classList.toggle("dragover", evt === "dragover");
+    });
+  });
+  dropZone.addEventListener("drop", e => {
+    if (e.dataTransfer.files.length) {
+      audioFileInput.files = e.dataTransfer.files;
+      updateFileName();
+    }
+  });
+  audioFileInput.addEventListener("change", updateFileName);
+  function updateFileName() {
+    const f = audioFileInput.files[0];
+    document.getElementById("fileName").textContent = f ? `Selected: ${f.name}` : "";
+  }
+
+  // --- Reference audio source: uploaded file vs. live mic recording ---
+  let recordedWavBlob = null; // holds the final WAV blob once a recording is captured
+
+  function switchSource(name) {
+    document.querySelectorAll(".source-switch .stab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".source-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(`stab-${name}`).classList.add("active");
+    document.getElementById(`source-${name}`).classList.add("active");
+    document.getElementById("status").textContent = "";
+  }
+
+  // --- Microphone recording -> WAV (browsers only record to webm/ogg natively,
+  // so we decode the capture and re-encode it as PCM WAV, which the backend
+  // and OmniVoice's ref_audio loader both read reliably) ---
+  let mediaRecorder = null;
+  let micStream = null;
+  let recordedChunks = [];
+  let micTimerInterval = null;
+  let micStartTime = 0;
+
+  async function toggleRecording() {
+    const btn = document.getElementById("micBtn");
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      return;
+    }
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      showStatus("Microphone access denied or unavailable: " + err.message, false);
+      return;
+    }
+
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(micStream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = onRecordingStopped;
+    mediaRecorder.start();
+
+    btn.classList.add("recording");
+    document.getElementById("micHint").textContent = "Recording... tap again to stop";
+    document.getElementById("micActions").style.display = "none";
+    document.getElementById("micPreview").style.display = "none";
+    micStartTime = Date.now();
+    micTimerInterval = setInterval(updateMicTimer, 200);
+  }
+
+  function updateMicTimer() {
+    const elapsed = (Date.now() - micStartTime) / 1000;
+    const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
+    const s = Math.floor(elapsed % 60).toString().padStart(2, "0");
+    document.getElementById("micTimer").textContent = `${m}:${s}`;
+    // Gentle nudge past 10s so the reference clip stays in the ideal range
+    if (elapsed > 10) document.getElementById("micHint").textContent = "10s+ — stop when ready";
+  }
+
+  async function onRecordingStopped() {
+    clearInterval(micTimerInterval);
+    document.getElementById("micBtn").classList.remove("recording");
+    micStream.getTracks().forEach(t => t.stop());
+
+    const rawBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    document.getElementById("micHint").textContent = "Converting recording...";
+
+    try {
+      recordedWavBlob = await webmBlobToWavBlob(rawBlob);
+      const preview = document.getElementById("micPreview");
+      preview.src = URL.createObjectURL(recordedWavBlob);
+      preview.style.display = "block";
+      document.getElementById("micActions").style.display = "flex";
+      document.getElementById("micHint").textContent = "Recording ready. Listen above, or re-record.";
+    } catch (err) {
+      showStatus("Could not process the recording: " + err.message, false);
+      document.getElementById("micHint").textContent = "Tap to start recording (3–10 seconds of clean speech)";
+    }
+  }
+
+  function reRecord() {
+    recordedWavBlob = null;
+    document.getElementById("micPreview").style.display = "none";
+    document.getElementById("micActions").style.display = "none";
+    document.getElementById("micTimer").textContent = "00:00";
+    toggleRecording();
+  }
+
+  function clearRecording() {
+    recordedWavBlob = null;
+    document.getElementById("micPreview").style.display = "none";
+    document.getElementById("micActions").style.display = "none";
+    document.getElementById("micTimer").textContent = "00:00";
+    document.getElementById("micHint").textContent = "Tap to start recording (3–10 seconds of clean speech)";
+  }
+
+  // Decode any browser-recorded audio (webm/ogg) into raw PCM, then encode
+  // as a standard 16-bit mono/stereo WAV file the backend can save straight
+  // to disk and pass to OmniVoice as ref_audio.
+  async function webmBlobToWavBlob(blob) {
+    const arrayBuffer = await blob.arrayBuffer();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioCtx();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    const wav = audioBufferToWav(audioBuffer);
+    audioCtx.close();
+    return new Blob([wav], { type: "audio/wav" });
+  }
+
+  function audioBufferToWav(buffer) {
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+
+    let interleaved;
+    if (numChannels === 2) {
+      const left = buffer.getChannelData(0);
+      const right = buffer.getChannelData(1);
+      interleaved = new Float32Array(left.length + right.length);
+      for (let i = 0, j = 0; i < left.length; i++, j += 2) {
+        interleaved[j] = left[i];
+        interleaved[j + 1] = right[i];
+      }
+    } else {
+      interleaved = buffer.getChannelData(0);
+    }
+
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+    const dataSize = interleaved.length * bytesPerSample;
+    const bufferOut = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(bufferOut);
+
+    const writeString = (offset, str) => {
+      for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    };
+
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, format, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(36, "data");
+    view.setUint32(40, dataSize, true);
+
+    let offset = 44;
+    for (let i = 0; i < interleaved.length; i++, offset += 2) {
+      const s = Math.max(-1, Math.min(1, interleaved[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+
+    return bufferOut;
+  }
+
+  function setBusy(btn, busyLabel) {
+    btn.disabled = true;
+    btn.dataset.original = btn.textContent;
+    btn.innerHTML = `<span class="spinner"></span>${busyLabel}`;
+  }
+  function setIdle(btn) {
+    btn.disabled = false;
+    btn.textContent = btn.dataset.original || "Generate";
+  }
+  function playResult(blob) {
+    const player = document.getElementById("player");
+    player.src = URL.createObjectURL(blob);
+    player.style.display = "block";
+    player.play();
+  }
+  function showStatus(msg, ok) {
+    const status = document.getElementById("status");
+    status.textContent = msg;
+    status.className = "status " + (ok ? "ok" : "error");
+  }
+
+  async function generatePreset() {
+    const btn = document.getElementById("generateBtn");
+    const text = document.getElementById("text").value.trim();
+    const voice = document.getElementById("voice").value;
+    if (!text) { showStatus("Please enter some text.", false); return; }
+
+    setBusy(btn, "Generating...");
+    showStatus("", true);
+    try {
+      const res = await fetch(`${API_BASE}/synthesize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `Server error (${res.status})`);
+      }
+      playResult(await res.blob());
+      showStatus("Done.", true);
+    } catch (err) {
+      showStatus("Error: " + err.message + " (is the backend running on " + API_BASE + "?)", false);
+    } finally {
+      setIdle(btn);
+    }
+  }
+
+  async function generateClone() {
+    const btn = document.getElementById("cloneBtn");
+    const usingMic = document.getElementById("stab-mic").classList.contains("active");
+    const uploadedFile = audioFileInput.files[0];
+    const refAudioSource = usingMic ? recordedWavBlob : uploadedFile;
+    const refText = document.getElementById("refText").value.trim();
+    const cloneText = document.getElementById("cloneText").value.trim();
+    const lang = document.getElementById("cloneLang").value;
+    const saveAs = document.getElementById("saveAs").value.trim();
+
+    if (!refAudioSource) {
+      showStatus(usingMic ? "Please record a reference clip first." : "Please select a reference audio file.", false);
+      return;
+    }
+    if (!refText) { showStatus("Please enter the exact transcript of the reference clip.", false); return; }
+    if (!cloneText) { showStatus("Please enter the text you want the voice to say.", false); return; }
+
+    setBusy(btn, "Cloning...");
+    showStatus("", true);
+    try {
+      const formData = new FormData();
+      formData.append("text", cloneText);
+      formData.append("ref_text", refText);
+      formData.append("lang", lang);
+      if (saveAs) formData.append("save_as", saveAs);
+      // File input gives a File (has .name); the mic recording is a bare
+      // Blob, so give it an explicit filename the backend can suffix from.
+      formData.append("audio_file", refAudioSource, usingMic ? "mic_recording.wav" : uploadedFile.name);
+
+      const res = await fetch(`${API_BASE}/clone-voice`, { method: "POST", body: formData });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || `Server error (${res.status})`);
+      }
+      playResult(await res.blob());
+      showStatus(saveAs ? `Done. Saved as "${saveAs}" for reuse.` : "Done.", true);
+    } catch (err) {
+      showStatus("Error: " + err.message + " (is the backend running on " + API_BASE + "?)", false);
+    } finally {
+      setIdle(btn);
+    }
+  }
+</script>
+
+</body>
+</html>
